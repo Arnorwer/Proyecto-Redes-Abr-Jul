@@ -25,6 +25,16 @@ Sfuente = pd.read_excel(datos, 'Sfuente')
 S_Z = pd.read_excel(datos, 'S_Z')
 Balance_S = pd.read_excel(datos, 'Balance_S')
 
+#creamos listas para almacenar los resultados
+lista_V_Xc = list()
+lista_V_Xl = list()
+lista_V_Xr = list()
+lisa_V_Zc = list()
+lista_V_Zl = list()
+lista_V_Zr = list()
+
+#creamos un array
+lista_Xc = []
 #calculamos el valor de w para poder hacer el wt y obtener el angulo de desfase
 if datos1[1][0] == 60: #si la frecuncia es 60Hz, el valor de w es directamente 60
     w = 377
