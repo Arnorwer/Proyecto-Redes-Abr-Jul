@@ -1,0 +1,28 @@
+//Imprimir una hoja entera
+    1. leemos o abrimos el archivo
+        pd.ExcelFile(nombre del excel)
+        pd.read_excel(nombre del excel)
+
+        en caso de que no tenga indices superiores en las columnas.
+        pd.read_excel(  , header = None)
+        lo anterior para crear un indice superior numerico y tambien un indice en el extremo izquierdo
+    2. establecemos el nombre de la hoja en cuestion
+        pd.read_excel(nombre del excel , "nombre de la hoja)
+    3. usamos print
+//Imprimir los nombres de las hojas
+    1. repetimos el paso 1 anterior
+    2. usamos sheet_names
+        nombre del archivo.sheet_names
+    3. usamos print
+
+//Ubicar un celda en especifico
+    1. usaremos el caso donde no la instruccion del caso donde no tenemos indices
+    2.usamos el esquema de hoja[columna][fila]
+        archivo = pd.read_excel(nombre del archivo, header = None)
+        archivo[columna][fila]
+//Imprimir una columna de una hoja en especifico
+    1. usamos la isntruccion del ejemplo 1
+        archivo = pd.ExcelFile(nombre del archivo)
+    2. guardamos la hoja a usar
+        hoja_x = pd.read_excel(archivo, "hoja_x")
+    3. usamos print
