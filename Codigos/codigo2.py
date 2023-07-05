@@ -37,13 +37,17 @@ else: #si la frecuencia no es 60, entonces se calcula manualmente el valor de w 
     w = round(2 * math.pi * hoja1[1][0], 4)
 
 #listas de valores
-lista_angulos = list()
+#V_fuente (Hoja2)
+lista_Vangulos = list()
 lista_V_Xc = list()
 lista_V_Xl = list()
 lista_V_Xr = list()
-lisa_V_Zc = list()
+lista_V_Zc = list()
 lista_V_Zl = list()
 lista_V_Zr = list()
+lista_Vrms = list()
+lista_V_fasorial = list()
+lista_VZeq = list()
 #le damos un valor incial
 lista_angulos = [0]
 lista_V_Xc = [0]
@@ -52,6 +56,49 @@ lista_V_Xr = [0]
 lista_V_Zc = [0]
 lista_V_Zl = [0]
 lista_V_Zr = [0]
+lista_Vrms = [0]
+lista_V_fasorial = [0]
+lista_VZeq = [0]
+
+#I_fuente (Hoja3)
+lista_Iangulos = list()
+lista_I_Xc = list()
+lista_I_Xl = list()
+lista_I_Xr = list()
+lista_I_Zc = list()
+lista_I_Zl = list()
+lista_I_Zr = list()
+lista_Irms = list()
+lista_I_fasorial = list()
+lista_IZeq = list()
+#le damos un valor incial
+lista_Iangulos = [0]
+lista_I_Xc = [0]
+lista_I_Xl = [0]
+lista_I_Xr = [0]
+lista_I_Zc = [0]
+lista_I_Zl = [0]
+lista_I_Zr = [0]
+lista_Irms = [0]
+lista_I_fasorial = [0]
+lista_IZeq = [0]
+
+#Z (Hoja4)
+lista_Zc = list()
+lista_Zl = list()
+lista_Zr = list()
+lista_Z_Zc = list()
+lista_Z_Zl = list()
+lista_Z_Zr = list()
+lista_Z_Zeq = list()
+#le damos un valor inicial
+lista_Zc = [0]
+lista_Zl = [0]
+lista_Zr = [0]
+lista_Z_Zc = [0]
+lista_Z_Zl = [0]
+lista_Z_Zr = [0]
+lista_Z_Zeq = [0]
 
 #Operaciones de los elementos para V_fuente (Hoja2)
 for n in range(1, len(V_fuente["Bus i"])+1):
@@ -59,14 +106,15 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     angulo = round(w * hoja2[3][n])
     #print(angulo)
     #guardamos el angulo en una lista en orden
-    lista_angulos.append(angulo)
+    lista_Vangulos.append(angulo)
     #Conversiones de mH a H y uF a F
-    converion_Cf = round(hoja2[25][n] * 10 ** -3, 4)
-    conversion_Lf = round(hoja2[5][n] * 10 ** -3, 4)
+    converion_Cf = hoja2[25][n] * 10 ** -6
+    conversion_Lf = hoja2[5][n] * 10 ** -3
     #calculo de la reactancia
-    V_Xl = round(w * conversion_Lf, 4) #reactancia del inductor
-    V_Xc = round(w * converion_Cf, 4) #reactancia del capacitor
-    V_Xc = round(1 / V_Xc, 4) #reactancia del capacitor
+    V_Xl = w * conversion_Lf #reactancia del inductor
+    V_Xc = w * converion_Cf #reactancia del capacitor
+    if V_Xc != 0:
+        V_Xc = 1 / V_Xc #reactancia del capacitor
     V_Xr = hoja2[4][n] #reactancia del resistor
     #guardamos los valores en listas
     lista_V_Xc.append(V_Xc)
@@ -74,19 +122,184 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     lista_V_Xr.append(V_Xr)
     #calculo de impedancia
     V_Zl = np.complex_(V_Xl * 1j) #impedancia del inductor
-    V_Zc = np.complex_(V_Xc * 1j) #impedancia del capacitor
-    V_Zr = np.complex_(V_Xr * 1j) #impedancia del resistor
+    V_Zl = np.round(V_Zl, 4)
+    V_Zc = np.complex_(V_Xc * -1j) #impedancia del capacitor
+    V_Zc = np.round(V_Zc, 4)
+    V_Zr = V_Xr #impedancia del resistor
+
+    '''AGREGAR CONDICION PARA CUANDO ALGUNO DE LOS VALORES ES CERO O ESTA VACIO, 
+    YA SEA PARA AGREGAR EN ESE LUGAR EL VALOR 1 O PARA QUE NO SE INCLUYA EN LA LISTA
+    CREO QUE LO MEJOR SERIA QUE SE TOMARA COMO VALOR 1'''
+
     #guardamos los valores en listas
     lista_V_Zc.append(V_Zc)
     lista_V_Zl.append(V_Zl)
     lista_V_Zr.append(V_Zr)
+    #calculo del voltaje rms
+    Vrms = round(hoja2[2][n] / np.sqrt(2), 4)
+    #guardamos en una lista
+    lista_Vrms.append(Vrms)
+    #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
+    V_fasorial = round(Vrms * np.cos(angulo) + Vrms * np.sin(angulo), 4)
+    #guardamos en una lista
+    lista_V_fasorial.append(V_fasorial)
 
-    #suma de las impedancias de una misma linea desde las listas
-    V
+'''print("Listas: ")
+print()
+print(lista_angulos)
+print(lista_V_Xc)
+print(lista_V_Xl)
+print(lista_V_Xr)
+print(lista_V_Zc)
+print(lista_V_Zl)
+print(lista_V_Zr)
+print(lista_Vrms)
+print(lista_V_fasorial)
+#print(hoja2)'''
+
+#calculo para el caso en que hay varias fuentes en un mismo nodo, es decir, en serie
+for i in range(1, len(hoja2[0])):
+    for k in range(i + 1, len(hoja2[0])):
+        if hoja2[0][i] == hoja2[0][k]:
+            #calculos el Vrms en fasores equivalente en ese nodo
+            Veq_fasorial = round(lista_V_fasorial[i] + lista_V_fasorial[k], 4)
+            #sacamos los voltajes del nodo de la lista
+            lista_V_fasorial.pop(i)
+            lista_V_fasorial.pop(k-1)
+            #guardamos el nuevo voltaje en la lista, en la pocicion de i
+            lista_V_fasorial.insert(i, Veq_fasorial)
+            #print(lista_V_fasorial)
+
+#caso impedancia nula
+
+#caso impedancia resistiva pura (solo resistencias)
+
+#cas impedancia capacitiva pura (solo capacitores)
+
+#caso impedancia inductiva pura (solo inductores)
+
+
+#Operaciones de los elementos para I_fuente (Hoja3)
+for n in range(1, len(I_fuente["Bus i"])+1):
+    #calculo del angulo de desfase
+    angulo = round(w * hoja3[3][n])
+    #print(angulo)
+    #guardamos el angulo en una lista en orden
+    lista_Iangulos.append(angulo)
+    #Conversiones de mH a H y uF a F
+    converion_Cf = hoja3[25][n] * 10 ** -6
+    conversion_Lf = hoja3[5][n] * 10 ** -3
+    #calculo de la reactancia
+    I_Xl = w * conversion_Lf #reactancia del inductor
+    I_Xc = w * converion_Cf #reactancia del capacitor
+    if I_Xc != 0:
+        I_Xc = 1 / I_Xc #reactancia del capacitor
+    I_Xr = hoja3[4][n] #reactancia del resistor
+    #guardamos los valores en listas
+    lista_I_Xc.append(I_Xc)
+    lista_I_Xl.append(I_Xl)
+    lista_I_Xr.append(I_Xr)
+    #calculo de impedancia
+    I_Zl = np.complex_(I_Xl * 1j) #impedancia del inductor
+    I_Zl = np.round(I_Zl, 4)
+    I_Zc = np.complex_(I_Xc * -1j) #impedancia del capacitor
+    I_Zc = np.round(I_Zc, 4)
+    I_Zr = (I_Xr) #impedancia del resistor
+
+    #guardamos los valores en listas
+    lista_I_Zc.append(I_Zc)
+    lista_I_Zl.append(I_Zl)
+    lista_I_Zr.append(I_Zr)
+    #calculo del voltaje rms
+    Irms = round(hoja3[2][n] / np.sqrt(2), 4)
+    #guardamos en una lista
+    lista_Irms.append(Irms)
+    #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
+    I_fasorial = round(Irms * np.cos(angulo) + Vrms * np.sin(angulo), 4)
+    #guardamos en una lista
+    lista_I_fasorial.append(I_fasorial)
+
+'''print("Listas: ")
+print()
+print(lista_angulos)
+print(lista_I_Xc)
+print(lista_I_Xl)
+print(lista_I_Xr)
+print(lista_I_Zc)
+print(lista_I_Zl)
+print(lista_I_Zr)
+print(lista_Irms)
+print(lista_I_fasorial)
+#print(hoja3)'''
+
+#calculo para el caso en que hay varias fuentes en un mismo nodo, es decir, en serie
+for i in range(1, len(hoja3[0])):
+    for k in range(i + 1, len(hoja3[0])):
+        if hoja3[0][i] == hoja3[0][k]:
+            #calculos el Vfasorial equivalente en ese nodo
+            Ieq_fasorial = round(lista_I_fasorial[i] + lista_I_fasorial[k], 4)
+            #sacamos las corrientes del nodo de la lista
+            lista_I_fasorial.pop(i)
+            lista_I_fasorial.pop(k-1)
+            #guardamos la nueva corriente en la lista, en la pocicion de i
+            lista_I_fasorial.insert(i, Ieq_fasorial)
+            #print(lista_I_fasorial)
+
+#Operaciones de los elementos para Z (Hoja4)
+for n in range(1, len(Z["Bus i"])+1):
+    #Conversiones de uH a H y uF a F
+    converion_C = hoja4[25][n] * 10 ** -6
+    conversion_L = hoja4[4][n] * 10 ** -6
+    #calculo de la reactancia
+    ZL = w * conversion_L #reactancia del inductor 
+    ZC = w * converion_C #reactancia del capacitor
+    if ZC != 0:
+        ZC = 1 / ZC #reactancia del capacitor
+    ZR = hoja4[3][n] #reactancia del resistor
+    #guardamos los valores en listas
+    lista_Zc.append(ZC)
+    lista_Zl.append(ZL)
+    lista_Zr.append(ZR)
+    #calculo de impedancia
+    Z_Zl = np.complex_(ZL * 1j) #impedancia del inductor
+    Z_Zl = np.round(Z_Zl, 4)
+    Z_Zc = np.complex_(ZC * -1j) #impedancia del capacitor
+    Z_Zc = np.round(Z_Zc, 4)
+    Z_Zr = (ZR) #impedancia del resistor
+    #guardamos los valores en listas
+    lista_Z_Zc.append(Z_Zc)
+    lista_Z_Zl.append(Z_Zl)
+    lista_Z_Zr.append(Z_Zr)
     
+contador = 0
+for resistencia in lista_Z_Zr:
+    if resistencia == 0:
+        contador = contador +1
+'''if len(Z["Bus i"]) == contador-1:
+    print("No hay resistencias")
+    Cont_R = 0'''
+contador = 0
+for capacitor in lista_Z_Zc:
+    if capacitor == 0:
+        contador = contador +1
+'''if len(Z["Bus i"]) == contador-1:
+    print("No hay capacitores")
+    Cont_C = 0'''
+contador = 0
+for inductores in lista_Z_Zl:
+    if inductores == 0:
+        contador = contador +1
+'''if len(Z["Bus i"]) == contador-1:
+    print("No hay inductores")
+    Cont_I = 0'''
 
-#print(hoja2)
-#calculo para el caso de elementos en un mismo nodo, es decir, paralelo
-#for i in range(len(V_fuente["Bus i"])):
-    #for k in range(i + 1, len(V_fuente["Bus i"])):
-        #print()
+
+'''print("Listas: ")
+print()
+print(lista_Zc)
+print(lista_Zl)
+print(lista_Zr)
+print(lista_Z_Zc)
+print(lista_Z_Zl)
+print(lista_Z_Zr)
+#print(hoja4)'''

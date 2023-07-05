@@ -1,0 +1,61 @@
+for i in range(1, len(hoja4[0])):
+    for k in range(i +1, len(hoja4[0])):
+        if hoja4[0][i] == hoja4[0][k] and hoja4[1][i] == hoja4[1][k]:
+            #calculo de las impedancias en paralelo
+            if lista_Z_Zc[i] != 0 and lista_Z_Zc[k] != 0:
+                Z_Zeq1 = round(1 / lista_Z_Zc[i] + (1 / lista_Z_Zc[k]), 4)
+                #convertimos a imaginarios
+                Z_Zeq1 = np.complex_(Z_Zeq1 * -1j)
+            elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] == 0:
+                Z_Zeq1 = 0
+
+            if lista_Z_Zl[i] != 0 and lista_Z_Zl[k] != 0:
+                Z_Zeq2 = 1 / lista_Z_Zl[i] + (1 / lista_Z_Zl[k])
+                #convertimos a imaginarios
+                Z_Zeq2 = np.complex_(Z_Zeq2 * 1j)
+            elif lista_Z_Zl[i] == 0 and lista_Z_Zl[k] == 0:
+                Z_Zeq2 = 0
+
+            if lista_Z_Zr[i] != 0 and lista_Z_Zr[k] != 0:
+                Z_Zeq3 = round((1/lista_Z_Zr[i]) + (1 / lista_Z_Zr[k]), 4)
+            elif lista_Z_Zr[i] == 0 and lista_Z_Zr[k] == 0:
+                Z_Zeq3 = 0
+            #calculamos la equivalente
+            if Z_Zeq1 != 0 and Z_Zeq2 != 0 and Z_Zeq3 != 0:
+                Z_Zeq = Z_Zeq1 + Z_Zeq2 + Z_Zeq3
+                print("Impedancia equivalente combinada de tres elementos")
+            elif Z_Zeq1 != 0 and Z_Zeq2 == 0 and Z_Zeq3 == 0:
+                Z_Zeq = Z_Zeq1
+                print("Impedancia equivalente capacitiva pura")
+            elif Z_Zeq1 == 0 and Z_Zeq2 != 0 and Z_Zeq3 == 0:
+                Z_Zeq = Z_Zeq2
+                print("Impedancia equivalente inductiva pura")
+            elif Z_Zeq1 == 0 and Z_Zeq2 == 0 and Z_Zeq3 != 0:
+                Z_Zeq = Z_Zeq3
+                print("Impedancia equivalente resistiva pura")
+            elif Z_Zeq1 != 0 and Z_Zeq2 == 0 and Z_Zeq3 != 0:
+                Z_Zeq = Z_Zeq1 + Z_Zeq3
+                print("Impedancia equivalente capacitiva y resistiva")
+            elif Z_Zeq1 == 0 and Z_Zeq2 != 0 and Z_Zeq3 != 0:
+                Z_Zeq = Z_Zeq2 + Z_Zeq3
+                print("Impedancia equivalente inductiva y resistiva")
+            elif Z_Zeq1 != 0 and Z_Zeq2 != 0 and Z_Zeq3 == 0:
+                Z_Zeq = Z_Zeq1 + Z_Zeq2
+                print("Impedancia equivalente capacitiva e inductiva")
+            elif Z_Zeq1 == 0 and Z_Zeq2 == 0 and Z_Zeq3 == 0:
+                Z_Zeq = 0
+                print("Datos incongruentes")
+                break
+            #sacamos los elementos anteriores de la listas
+            lista_Z_Zr.pop(i)
+            lista_Z_Zr.pop(k-1)
+            lista_Z_Zc.pop(i)
+            lista_Z_Zc.pop(k-1)
+            lista_Z_Zl.pop(i)
+            lista_Z_Zl.pop(k-1)
+            #guardamos el nuevo elemento en la lista, en la posicion del primero
+            lista_Z_Zeq.insert(i, Z_Zeq)
+
+#convertimos a imaginarios los elementos restantes de las listas
+lista_Z_Zc = [n * -1j for n in lista_Z_Zc]
+lista_Z_Zl = [n * 1j for n in lista_Z_Zl]

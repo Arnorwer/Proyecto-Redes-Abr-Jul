@@ -1,0 +1,39 @@
+calculo para el caso de elementos en un mismo nodo, es decir, paralelo
+for i in range(1, len(hoja2[0])):
+    for k in range(i + 1, len(hoja2[0])):
+        if hoja2[0][i] == hoja2[0][k]:
+            #calculo de las impedancias en paralelo
+            V_Zeq1 = round(1/lista_V_Zc[i] + 1/lista_V_Zc[k], 4)
+            V_Zeq2 = round(1/lista_V_Zl[i] + 1/lista_V_Zl[k], 4)
+            V_Zeq3 = round(1/lista_V_Zr[i] + 1/lista_V_Zr[k], 4)
+            V_Zeq1 = round(1 / V_Zeq1, 4)
+            V_Zeq2 = round(1 / V_Zeq2, 4)
+            V_Zeq3 = round(1 / V_Zeq3,4)
+            #conversion a imaginario
+            V_Zeq1 = np.complex_(V_Zeq1 * -1j)
+            V_Zeq2 = np.complex_(V_Zeq2 * 1j)
+            #print(V_Zeq1)
+            #print(V_Zeq2)
+            #print(V_Zeq3)
+            #calculamos el equivalante
+            V_Zeq = V_Zeq2 + V_Zeq1 + V_Zeq3
+            #print(V_Zeq)
+            #sacamos los elementos anteriores de la lista
+            #print(lista_V_Zc)
+            lista_V_Zr.pop(i)
+            lista_V_Zr.pop(k-1)
+            lista_V_Zc.pop(i)
+            lista_V_Zc.pop(k-1)
+            lista_V_Zl.pop(i)
+            lista_V_Zl.pop(k-1)
+            #guardamos en una lista
+            lista_VZeq.append(V_Zeq)
+
+#convertimos en imaginario los elementos restantes de las listas
+#print(lista_V_Zc)
+lista_V_Zc = [n * -1j for n in lista_V_Zc]
+#print(lista_V_Zc)
+lista_V_Zl = [n * 1j for n in lista_V_Zl]
+#print(lista_V_Zl)
+#sumar todas las impedancias
+Z_total = sum(lista_V_Zl) + sum(lista_V_Zc) + sum(lista_V_Zr) + sum(lista_VZeq)
