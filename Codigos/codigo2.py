@@ -191,7 +191,7 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     #guardamos en una lista
     lista_Irms.append(Irms)
     #calculo del corriente en forma fasorial (CREO QUE ES ASI, IDK ??)
-    I_fasorial = Irms * np.cos(I_angulo) + Irms * np.sin(I_angulo)
+    I_fasorial = Irms * np.cos(I_angulo) + np.complex_(Irms * np.sin(I_angulo) * 1j)
     I_fasorial = np.round(I_fasorial, 4)
     #guardamos en una lista
     lista_I_fasorial.append(I_fasorial)
@@ -211,7 +211,7 @@ for i in range(1, len(hoja3[0])):
     for k in range(i + 1, len(hoja3[0])):
         if hoja3[0][i] == hoja3[0][k]:
             #calculos el Vfasorial equivalente en ese nodo
-            Ieq_fasorial = round(lista_I_fasorial[i] + lista_I_fasorial[k], 4)
+            Ieq_fasorial = np.round(lista_I_fasorial[i] + lista_I_fasorial[k], 4)
             #sacamos las corrientes del nodo de la lista
             lista_I_fasorial.pop(i)
             lista_I_fasorial.pop(k-1)
@@ -251,10 +251,14 @@ for n in range(1, len(Z["Bus i"])+1):
     lista_Z_Zr.append(Z_Zr)
 
 '''print("Listas: ")
-
 print()
 print(lista_Z_Zc)
 print(lista_Z_Zl)
 print(lista_Z_Zr)
 #print(hoja4)'''
-
+#calculo de las impedancias que esten en paralelo
+for i in range(1, len(hoja4[0])):
+    for k in range(i + 1, len(hoja4[0])):
+        if hoja4[0][i] == hoja4[0][k] and hoja4[1][i] == hoja4[1][k]:
+            Z_Zeq1 = 1 / lista_Z_Zc[i] + 1 / lista_Z_Zc[k]
+            
