@@ -46,7 +46,7 @@ lista_Vrms = list()
 lista_V_fasorial = list()
 lista_VZeq = list()
 #le damos un valor incial
-lista_angulos = [0]
+lista_Vangulos = [0]
 lista_V_Zc = [0]
 lista_V_Zl = [0]
 lista_V_Zr = [0]
@@ -95,16 +95,16 @@ for n in range(1, len(V_fuente["Bus i"])+1):
 
 for n in range(1, len(V_fuente["Bus i"])+1):
     #calculo del angulo de desfase
-    angulo = round(w * hoja2[3][n])
+    V_angulo = round(w * hoja2[3][n])
     #print(angulo)
     #guardamos el angulo en una lista en orden
-    lista_Vangulos.append(angulo)
+    lista_Vangulos.append(V_angulo)
     #Conversiones de mH a H y uF a F
-    converion_Cf = hoja2[25][n] * 10 ** -6
-    conversion_Lf = hoja2[5][n] * 10 ** -3
+    converion_CfV = hoja2[25][n] * 10 ** -6
+    conversion_LfV = hoja2[5][n] * 10 ** -3
     #calculo de la reactancia
-    V_Xl = w * conversion_Lf #reactancia del inductor
-    V_Xc = w * converion_Cf #reactancia del capacitor
+    V_Xl = w * conversion_LfV #reactancia del inductor
+    V_Xc = w * converion_CfV #reactancia del capacitor
     if V_Xc != 0:
         V_Xc = 1 / V_Xc #reactancia del capacitor
     V_Xr = hoja2[4][n] #reactancia del resistor
@@ -123,7 +123,8 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     #guardamos en una lista
     lista_Vrms.append(Vrms)
     #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
-    V_fasorial = round(Vrms * np.cos(angulo) + Vrms * np.sin(angulo), 4)
+    V_fasorial = Vrms * np.cos(V_angulo) + np.complex_(Vrms * np.sin(V_angulo) * 1j)
+    V_fasorial = np.round(V_fasorial, 4)
     #guardamos en una lista
     lista_V_fasorial.append(V_fasorial)
 
@@ -142,7 +143,7 @@ for i in range(1, len(hoja2[0])):
     for k in range(i + 1, len(hoja2[0])):
         if hoja2[0][i] == hoja2[0][k]:
             #calculos el Vrms en fasores equivalente en ese nodo
-            Veq_fasorial = round(lista_V_fasorial[i] + lista_V_fasorial[k], 4)
+            Veq_fasorial = np.round(lista_V_fasorial[i] + lista_V_fasorial[k], 4)
             #sacamos los voltajes del nodo de la lista
             lista_V_fasorial.pop(i)
             lista_V_fasorial.pop(k-1)
@@ -162,16 +163,16 @@ for n in range(1, len(I_fuente["Bus i"])+1):
 
 for n in range(1, len(I_fuente["Bus i"])+1):
     #calculo del angulo de desfase
-    angulo = round(w * hoja3[3][n])
+    I_angulo = round(w * hoja3[3][n])
     #print(angulo)
     #guardamos el angulo en una lista en orden
-    lista_Iangulos.append(angulo)
+    lista_Iangulos.append(I_angulo)
     #Conversiones de mH a H y uF a F
-    converion_Cf = hoja3[25][n] * 10 ** -6
-    conversion_Lf = hoja3[5][n] * 10 ** -3
+    converion_CfI = hoja3[25][n] * 10 ** -6
+    conversion_LfI = hoja3[5][n] * 10 ** -3
     #calculo de la reactancia
-    I_Xl = w * conversion_Lf #reactancia del inductor
-    I_Xc = w * converion_Cf #reactancia del capacitor
+    I_Xl = w * conversion_LfI #reactancia del inductor
+    I_Xc = w * converion_CfI #reactancia del capacitor
     if I_Xc != 0:
         I_Xc = 1 / I_Xc #reactancia del capacitor
     I_Xr = hoja3[4][n] #reactancia del resistor
@@ -185,12 +186,13 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     lista_I_Zc.append(I_Zc)
     lista_I_Zl.append(I_Zl)
     lista_I_Zr.append(I_Zr)
-    #calculo del voltaje rms
+    #calculo del corriente rms
     Irms = round(hoja3[2][n] / np.sqrt(2), 4)
     #guardamos en una lista
     lista_Irms.append(Irms)
-    #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
-    I_fasorial = round(Irms * np.cos(angulo) + Vrms * np.sin(angulo), 4)
+    #calculo del corriente en forma fasorial (CREO QUE ES ASI, IDK ??)
+    I_fasorial = Irms * np.cos(I_angulo) + Irms * np.sin(I_angulo)
+    I_fasorial = np.round(I_fasorial, 4)
     #guardamos en una lista
     lista_I_fasorial.append(I_fasorial)
 
@@ -249,8 +251,10 @@ for n in range(1, len(Z["Bus i"])+1):
     lista_Z_Zr.append(Z_Zr)
 
 '''print("Listas: ")
+
 print()
 print(lista_Z_Zc)
 print(lista_Z_Zl)
 print(lista_Z_Zr)
 #print(hoja4)'''
+
