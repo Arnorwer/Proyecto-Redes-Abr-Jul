@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import math
+import math, sys
 
 #revisamos el excel con pandas
 dat = "data_io_copia.xlsx"
@@ -10,7 +10,7 @@ print()
 #guardamos las hojas de cada uno para poder revisar las celdas
 #para las celdas se usa el formato [columna][fila]
 hoja1 = pd.read_excel(dat,"f_and_ouput", header=None)
-hoja2 = pd.read_excel(dat, "V_fuente", header=None)
+hoja2 = pd.read_excel(dat, "V_fuente", header=None, na_filter=False)
 hoja3 = pd.read_excel(dat, "I_fuente", header=None)
 hoja4 = pd.read_excel(dat, "Z", header=None)
 hoja5 = pd.read_excel(dat, "VTH_AND_ZTH", header=None)
@@ -18,7 +18,7 @@ hoja6 = pd.read_excel(dat, "Sfuente", header=None)
 hoja7 = pd.read_excel(dat, "S_Z", header=None)
 hoja8 = pd.read_excel(dat, "Balance_S", header=None)
 #print(hoja2)
-#print(hoja2[3])
+#print(hoja4)
 
 #almcenamos las paginas de la tabla de excel
 f_and_ouput = pd.read_excel(datos, 'f_and_ouput')
@@ -100,7 +100,17 @@ lista_Z_Zl = [0]
 lista_Z_Zr = [0]
 lista_Z_Zeq = [0]
 
+
 #Operaciones de los elementos para V_fuente (Hoja2)
+#Revisamos primero si los valores en las listas no presentan errores
+for n in range(1, len(V_fuente["Bus i"])+1):
+    if type(hoja2[4][n]) == str or hoja2[4][n] < 0:
+        sys.exit("Error de datos en Rf")
+    elif type(hoja2[5][n]) == str or hoja2[5][n] < 0:
+        sys.exit("Error de datos en Lf")
+    elif type(hoja2[25][n]) == str or hoja2[25][n] < 0:
+        sys.exit("Error de datos Cf")
+
 for n in range(1, len(V_fuente["Bus i"])+1):
     #calculo del angulo de desfase
     angulo = round(w * hoja2[3][n])
@@ -126,11 +136,6 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     V_Zc = np.complex_(V_Xc * -1j) #impedancia del capacitor
     V_Zc = np.round(V_Zc, 4)
     V_Zr = V_Xr #impedancia del resistor
-
-    '''AGREGAR CONDICION PARA CUANDO ALGUNO DE LOS VALORES ES CERO O ESTA VACIO, 
-    YA SEA PARA AGREGAR EN ESE LUGAR EL VALOR 1 O PARA QUE NO SE INCLUYA EN LA LISTA
-    CREO QUE LO MEJOR SERIA QUE SE TOMARA COMO VALOR 1'''
-
     #guardamos los valores en listas
     lista_V_Zc.append(V_Zc)
     lista_V_Zl.append(V_Zl)
@@ -170,16 +175,16 @@ for i in range(1, len(hoja2[0])):
             lista_V_fasorial.insert(i, Veq_fasorial)
             #print(lista_V_fasorial)
 
-#caso impedancia nula
-
-#caso impedancia resistiva pura (solo resistencias)
-
-#cas impedancia capacitiva pura (solo capacitores)
-
-#caso impedancia inductiva pura (solo inductores)
-
-
 #Operaciones de los elementos para I_fuente (Hoja3)
+#Revisamos primero si los valores en las listas no presentan errores
+for n in range(1, len(I_fuente["Bus i"])+1):
+    if type(hoja3[4][n]) == str or hoja3[4][n] < 0:
+        sys.exit("Error de datos en RfI")
+    elif type(hoja3[5][n]) == str or hoja3[5][n] < 0:
+        sys.exit("Error de datos en LfI")
+    elif type(hoja3[25][n]) == str or hoja3[25][n] < 0:
+        sys.exit("Error de datos CfI")
+
 for n in range(1, len(I_fuente["Bus i"])+1):
     #calculo del angulo de desfase
     angulo = round(w * hoja3[3][n])
@@ -246,6 +251,15 @@ for i in range(1, len(hoja3[0])):
             #print(lista_I_fasorial)
 
 #Operaciones de los elementos para Z (Hoja4)
+#Revisamos primero si los valores en las listas no presentan errores
+for n in range(1, len(Z["Bus i"])+1):
+    if type(hoja4[3][n]) == str or hoja4[3][n] < 0:
+        sys.exit("Error de datos en R")
+    elif type(hoja4[4][n]) == str or hoja4[4][n] < 0:
+        sys.exit("Error de datos en L")
+    elif type(hoja4[25][n]) == str or hoja4[25][n] < 0:
+        sys.exit("Error de datos C")
+
 for n in range(1, len(Z["Bus i"])+1):
     #Conversiones de uH a H y uF a F
     converion_C = hoja4[25][n] * 10 ** -6
@@ -292,7 +306,6 @@ for inductores in lista_Z_Zl:
 '''if len(Z["Bus i"]) == contador-1:
     print("No hay inductores")
     Cont_I = 0'''
-
 
 '''print("Listas: ")
 print()
