@@ -11,8 +11,8 @@ print()
 #para las celdas se usa el formato [columna][fila]
 hoja1 = pd.read_excel(dat,"f_and_ouput", header=None)
 hoja2 = pd.read_excel(dat, "V_fuente", header=None, na_filter=False)
-hoja3 = pd.read_excel(dat, "I_fuente", header=None)
-hoja4 = pd.read_excel(dat, "Z", header=None)
+hoja3 = pd.read_excel(dat, "I_fuente", header=None, na_filter=False)
+hoja4 = pd.read_excel(dat, "Z", header=None, na_filter=False)
 hoja5 = pd.read_excel(dat, "VTH_AND_ZTH", header=None)
 hoja6 = pd.read_excel(dat, "Sfuente", header=None)
 hoja7 = pd.read_excel(dat, "S_Z", header=None)
@@ -260,5 +260,12 @@ print(lista_Z_Zr)
 for i in range(1, len(hoja4[0])):
     for k in range(i + 1, len(hoja4[0])):
         if hoja4[0][i] == hoja4[0][k] and hoja4[1][i] == hoja4[1][k]:
-            Z_Zeq1 = 1 / lista_Z_Zc[i] + 1 / lista_Z_Zc[k]
-            
+            #Para las inductancias capacitivas
+            if lista_Z_Zc[i] != 0 and lista_Z_Zc[k] != 0:
+                Z_Zeq1 = 1 / lista_Z_Zc[i] + 1 / lista_Z_Zc[k]
+            elif lista_Z_Zc[i] != 0 and lista_Z_Zc[k] == 0:
+                Z_Zeq1 = 1 / lista_Z_Zc[i]
+            elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] != 0:
+                Z_Zeq1 = 1 / lista_Z_Zc[k]
+            elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] == 0:
+                Z_Zeq1 = 0
