@@ -269,3 +269,21 @@ for i in range(1, len(hoja4[0])):
                 Z_Zeq1 = 1 / lista_Z_Zc[k]
             elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] == 0:
                 Z_Zeq1 = 0
+            #Para las inductancias inductivas
+            if lista_Z_Zl[i] != 0 and lista_Z_Zl[k] != 0:
+                Z_Zeq2 = 1 / lista_Z_Zl[i] + 1 / lista_Z_Zl[k]
+            elif lista_Z_Zl[i] != 0 and lista_Z_Zl[k] == 0:
+                Z_Zeq2 = 1 / lista_Z_Zl[i]
+            elif lista_Z_Zl[i] == 0 and lista_Z_Zl[k] != 0:
+                Z_Zeq2 = 1 / lista_Z_Zl[k]
+            elif lista_Z_Zl[i] == 0 and lista_Z_Zl[k] == 0:
+                Z_Zeq2 = 0
+            #Para las inductancias resistivas
+            if lista_Z_Zr[i] != 0 and lista_Z_Zr[k] != 0:
+                Z_Zeq3 = 1 / lista_Z_Zr[i] + 1 / lista_Z_Zr[k]
+            elif lista_Z_Zr[i] != 0 and lista_Z_Zr[k] == 0:
+                Z_Zeq3 = 1 / lista_Z_Zr[i]
+            elif lista_Z_Zr[i] == 0 and lista_Z_Zr[k] != 0:
+                Z_Zeq3 = 1 / lista_Z_Zr[k]
+            elif lista_Z_Zr[i] == 0 and lista_Z_Zr[k] == 0:
+                Z_Zeq3 = 0
