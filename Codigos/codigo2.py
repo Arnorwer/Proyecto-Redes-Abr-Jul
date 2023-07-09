@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import math, sys
+import math, sys, openpyxl
 
 #revisamos el excel con pandas
 dat = "data_io_copia.xlsx"
@@ -17,8 +17,24 @@ hoja5 = pd.read_excel(dat, "VTH_AND_ZTH", header=None)
 hoja6 = pd.read_excel(dat, "Sfuente", header=None)
 hoja7 = pd.read_excel(dat, "S_Z", header=None)
 hoja8 = pd.read_excel(dat, "Balance_S", header=None)
-#print(hoja2)
+#print(hoja1[1][1])
 #print(hoja4)
+
+#Creamos el archivo copia de respuesta
+#Carga el archivo de Excel
+original = openpyxl.load_workbook(dat)
+#Crea una copia del archivo de Excel
+copia = openpyxl.Workbook()
+#Copia los datos de la hoja de cálculo del archivo original a la copia
+for sheet in original:
+    sheet_copy = copia.create_sheet(sheet.title)
+    for row in sheet:
+        for cell in row:
+            sheet_copy[cell.coordinate].value = cell.value
+#Guarda la copia del archivo de Excel
+copia.save(hoja1[1][1])
+
+
 
 #almcenamos las paginas de la tabla de excel
 f_and_ouput = pd.read_excel(datos, 'f_and_ouput')
@@ -86,11 +102,19 @@ lista_Z_Zeq = [0]
 #Operaciones de los elementos para V_fuente (Hoja2)
 #Revisamos primero si los valores en las listas no presentan errores
 for n in range(1, len(V_fuente["Bus i"])+1):
+    if hoja2[4][n] == 0:
+        print()
+    elif hoja2[5][n] == 0:
+        print()
+    elif hoja2[6][n] == 0:
+        print()
+
+for n in range(1, len(V_fuente["Bus i"])+1):
     if type(hoja2[4][n]) == str or hoja2[4][n] < 0:
         sys.exit("Error de datos en Rf")
     elif type(hoja2[5][n]) == str or hoja2[5][n] < 0:
         sys.exit("Error de datos en Lf")
-    elif type(hoja2[25][n]) == str or hoja2[25][n] < 0:
+    elif type(hoja2[6][n]) == str or hoja2[6][n] < 0:
         sys.exit("Error de datos Cf")
 
 for n in range(1, len(V_fuente["Bus i"])+1):
@@ -100,7 +124,7 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     #guardamos el angulo en una lista en orden
     lista_Vangulos.append(V_angulo)
     #Conversiones de mH a H y uF a F
-    converion_CfV = hoja2[25][n] * 10 ** -6
+    converion_CfV = hoja2[6][n] * 10 ** -6
     conversion_LfV = hoja2[5][n] * 10 ** -3
     #calculo de la reactancia
     V_Xl = w * conversion_LfV #reactancia del inductor
@@ -114,10 +138,13 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     V_Zc = np.complex_(V_Xc * -1j) #impedancia del capacitor
     V_Zc = np.round(V_Zc, 4)
     V_Zr = V_Xr #impedancia del resistor
+    #calculamos la impedancia equivalante de los elementos en serie
+    V_Zeq = np.round(V_Zr + V_Zl + V_Zc, 4)
     #guardamos los valores en listas
     lista_V_Zc.append(V_Zc)
     lista_V_Zl.append(V_Zl)
     lista_V_Zr.append(V_Zr)
+    lista_VZeq.append(V_Zeq)
     #calculo del voltaje rms
     Vrms = round(hoja2[2][n] / np.sqrt(2), 4)
     #guardamos en una lista
@@ -154,11 +181,19 @@ for i in range(1, len(hoja2[0])):
 #Operaciones de los elementos para I_fuente (Hoja3)
 #Revisamos primero si los valores en las listas no presentan errores
 for n in range(1, len(I_fuente["Bus i"])+1):
+    if hoja3[4][n] == 0:
+        print()
+    elif hoja3[5][n] == 0:
+        print()
+    elif hoja3[6][n] == 0:
+        print()
+
+for n in range(1, len(I_fuente["Bus i"])+1):
     if type(hoja3[4][n]) == str or hoja3[4][n] < 0:
         sys.exit("Error de datos en RfI")
     elif type(hoja3[5][n]) == str or hoja3[5][n] < 0:
         sys.exit("Error de datos en LfI")
-    elif type(hoja3[25][n]) == str or hoja3[25][n] < 0:
+    elif type(hoja3[6][n]) == str or hoja3[6][n] < 0:
         sys.exit("Error de datos CfI")
 
 for n in range(1, len(I_fuente["Bus i"])+1):
@@ -168,7 +203,7 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     #guardamos el angulo en una lista en orden
     lista_Iangulos.append(I_angulo)
     #Conversiones de mH a H y uF a F
-    converion_CfI = hoja3[25][n] * 10 ** -6
+    converion_CfI = hoja3[6][n] * 10 ** -6
     conversion_LfI = hoja3[5][n] * 10 ** -3
     #calculo de la reactancia
     I_Xl = w * conversion_LfI #reactancia del inductor
@@ -182,10 +217,13 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     I_Zc = np.complex_(I_Xc * -1j) #impedancia del capacitor
     I_Zc = np.round(I_Zc, 4)
     I_Zr = (I_Xr) #impedancia del resistor
+    #calculo de la impedancia equivalente en serie
+    I_Zeq = np.round(I_Zr + I_Zl + I_Zc, 4)
     #guardamos los valores en listas
     lista_I_Zc.append(I_Zc)
     lista_I_Zl.append(I_Zl)
     lista_I_Zr.append(I_Zr)
+    lista_IZeq.append(I_Zeq)
     #calculo del corriente rms
     Irms = round(hoja3[2][n] / np.sqrt(2), 4)
     #guardamos en una lista
@@ -222,16 +260,24 @@ for i in range(1, len(hoja3[0])):
 #Operaciones de los elementos para Z (Hoja4)
 #Revisamos primero si los valores en las listas no presentan errores
 for n in range(1, len(Z["Bus i"])+1):
+    if hoja4[3][n] == 0:
+        print()
+    elif hoja4[4][n] == 0:
+        print()
+    elif hoja4[5][n] == 0:
+        print()
+
+for n in range(1, len(Z["Bus i"])+1):
     if type(hoja4[3][n]) == str or hoja4[3][n] < 0:
         sys.exit("Error de datos en R")
     elif type(hoja4[4][n]) == str or hoja4[4][n] < 0:
         sys.exit("Error de datos en L")
-    elif type(hoja4[25][n]) == str or hoja4[25][n] < 0:
+    elif type(hoja4[5][n]) == str or hoja4[5][n] < 0:
         sys.exit("Error de datos C")
 
 for n in range(1, len(Z["Bus i"])+1):
     #Conversiones de uH a H y uF a F
-    converion_C = hoja4[25][n] * 10 ** -6
+    converion_C = hoja4[5][n] * 10 ** -6
     conversion_L = hoja4[4][n] * 10 ** -6
     #calculo de la reactancia
     ZL = w * conversion_L #reactancia del inductor 
@@ -245,11 +291,13 @@ for n in range(1, len(Z["Bus i"])+1):
     Z_Zc = np.complex_(ZC * -1j) #impedancia del capacitor
     Z_Zc = np.round(Z_Zc, 4)
     Z_Zr = (ZR) #impedancia del resistor
+    #calculo de las impedancias en serie
+    Z_Zeq = np.round(Z_Zr + Z_Zl + Z_Zc, 4)
     #guardamos los valores en listas
     lista_Z_Zc.append(Z_Zc)
     lista_Z_Zl.append(Z_Zl)
     lista_Z_Zr.append(Z_Zr)
-
+    lista_Z_Zeq.append(Z_Zeq)
 '''print("Listas: ")
 print()
 print(lista_Z_Zc)
@@ -261,29 +309,20 @@ for i in range(1, len(hoja4[0])):
     for k in range(i + 1, len(hoja4[0])):
         if hoja4[0][i] == hoja4[0][k] and hoja4[1][i] == hoja4[1][k]:
             #Para las inductancias capacitivas
-            if lista_Z_Zc[i] != 0 and lista_Z_Zc[k] != 0:
-                Z_Zeq1 = 1 / lista_Z_Zc[i] + 1 / lista_Z_Zc[k]
-            elif lista_Z_Zc[i] != 0 and lista_Z_Zc[k] == 0:
-                Z_Zeq1 = 1 / lista_Z_Zc[i]
-            elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] != 0:
-                Z_Zeq1 = 1 / lista_Z_Zc[k]
-            elif lista_Z_Zc[i] == 0 and lista_Z_Zc[k] == 0:
-                Z_Zeq1 = 0
-            #Para las inductancias inductivas
-            if lista_Z_Zl[i] != 0 and lista_Z_Zl[k] != 0:
-                Z_Zeq2 = 1 / lista_Z_Zl[i] + 1 / lista_Z_Zl[k]
-            elif lista_Z_Zl[i] != 0 and lista_Z_Zl[k] == 0:
-                Z_Zeq2 = 1 / lista_Z_Zl[i]
-            elif lista_Z_Zl[i] == 0 and lista_Z_Zl[k] != 0:
-                Z_Zeq2 = 1 / lista_Z_Zl[k]
-            elif lista_Z_Zl[i] == 0 and lista_Z_Zl[k] == 0:
-                Z_Zeq2 = 0
-            #Para las inductancias resistivas
-            if lista_Z_Zr[i] != 0 and lista_Z_Zr[k] != 0:
-                Z_Zeq3 = 1 / lista_Z_Zr[i] + 1 / lista_Z_Zr[k]
-            elif lista_Z_Zr[i] != 0 and lista_Z_Zr[k] == 0:
-                Z_Zeq3 = 1 / lista_Z_Zr[i]
-            elif lista_Z_Zr[i] == 0 and lista_Z_Zr[k] != 0:
-                Z_Zeq3 = 1 / lista_Z_Zr[k]
-            elif lista_Z_Zr[i] == 0 and lista_Z_Zr[k] == 0:
-                Z_Zeq3 = 0
+            if lista_Z_Zeq[i] != 0 and lista_Z_Zeq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zeq[i] + 1 / lista_Z_Zeq[k]
+            elif lista_Z_Zeq[i] != 0 and lista_Z_Zeq[k] == 0:
+                Z_Zeq = 1 / lista_Z_Zeq[i]
+            elif lista_Z_Zeq[i] == 0 and lista_Z_Zeq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zeq[k]
+            elif lista_Z_Zeq[i] == 0 and lista_Z_Zeq[k] == 0:
+                Z_Zeq = 0
+            #Suma de la impedancia equivalente
+            if Z_Zeq != 0:
+                Z_Zeq = np.round(1 / Z_Zeq)
+            #sacamos de las listas las impedancias en paralelo
+            #sacamos los elementos anteriores de la listas
+            lista_Z_Zeq.pop(i)
+            lista_Z_Zeq.pop(k-1)
+            #guardamos los datos en una lista
+            lista_Z_Zeq.insert(i, Z_Zeq)
