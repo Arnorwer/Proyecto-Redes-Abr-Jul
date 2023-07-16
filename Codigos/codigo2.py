@@ -395,9 +395,11 @@ for i in range(1, len(hoja4[1])):
 #crear la matriz
 ybus_array = np.zeros((dim, dim), dtype = "complex_")
 
-#print(ybus_array)
-'''contador = 0
-for n in range(dim):
-    for m in range(dim):
-        ybus_array[n][m] = contador
-        contador += 1'''
+for i in range(dim):
+    for j in range(dim):
+        if i == j:
+            ybus_array[i][j] = lista_VYeq[i+1] + lista_IYeq[i+1] + lista_Z_Yieq[i+1] + lista_Z_Ykeq[j+1]
+        elif i != j:
+            ybus_array[i][j] = lista_VYeq[i+1] + lista_IYeq[i+1] + lista_Z_Yieq[i+1] + lista_VYeq[j+1] + lista_IYeq[j+1] + lista_Z_Ykeq[j+1]
+
+print(ybus_array)
