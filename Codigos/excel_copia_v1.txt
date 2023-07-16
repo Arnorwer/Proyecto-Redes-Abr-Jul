@@ -1,0 +1,13 @@
+#Creamos el archivo copia de respuesta
+#Carga el archivo de Excel
+original = openpyxl.load_workbook(dat)
+#Crea una copia del archivo de Excel
+copia = openpyxl.Workbook()
+#Copia los datos de la hoja de cálculo del archivo original a la copia
+for sheet in original:
+    sheet_copy = copia.create_sheet(sheet.title)
+    for row in sheet:
+        for cell in row:
+            sheet_copy[cell.coordinate].value = cell.value
+#Guarda la copia del archivo de Excel
+copia.save(hoja1[1][1])

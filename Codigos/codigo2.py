@@ -17,24 +17,6 @@ hoja5 = pd.read_excel(dat, "VTH_AND_ZTH", header=None)
 hoja6 = pd.read_excel(dat, "Sfuente", header=None)
 hoja7 = pd.read_excel(dat, "S_Z", header=None)
 hoja8 = pd.read_excel(dat, "Balance_S", header=None)
-#print(hoja1[1][1])
-#print(hoja4)
-
-#Creamos el archivo copia de respuesta
-#Carga el archivo de Excel
-original = openpyxl.load_workbook(dat)
-#Crea una copia del archivo de Excel
-copia = openpyxl.Workbook()
-#Copia los datos de la hoja de cálculo del archivo original a la copia
-for sheet in original:
-    sheet_copy = copia.create_sheet(sheet.title)
-    for row in sheet:
-        for cell in row:
-            sheet_copy[cell.coordinate].value = cell.value
-#Guarda la copia del archivo de Excel
-copia.save(hoja1[1][1])
-
-
 
 #almcenamos las paginas de la tabla de excel
 f_and_ouput = pd.read_excel(datos, 'f_and_ouput')
@@ -54,52 +36,79 @@ else: #si la frecuencia no es 60, entonces se calcula manualmente el valor de w 
 
 #listas de valores
 #V_fuente (Hoja2)
-lista_Vangulos = list()
-lista_V_Zc = list()
-lista_V_Zl = list()
-lista_V_Zr = list()
-lista_Vrms = list()
 lista_V_fasorial = list()
 lista_VZeq = list()
+lista_VYeq = list()
+lista_Vnodos = list()
 #le damos un valor incial
-lista_Vangulos = [0]
-lista_V_Zc = [0]
-lista_V_Zl = [0]
-lista_V_Zr = [0]
-lista_Vrms = [0]
 lista_V_fasorial = [0]
 lista_VZeq = [0]
+lista_VYeq = [0]
 
 #I_fuente (Hoja3)
-lista_Iangulos = list()
-lista_I_Zc = list()
-lista_I_Zl = list()
-lista_I_Zr = list()
-lista_Irms = list()
 lista_I_fasorial = list()
 lista_IZeq = list()
+lista_IYeq = list()
+lista_Inodos = list()
 #le damos un valor incial
-lista_Iangulos = [0]
-lista_I_Zc = [0]
-lista_I_Zl = [0]
-lista_I_Zr = [0]
-lista_Irms = [0]
 lista_I_fasorial = [0]
 lista_IZeq = [0]
+lista_IYeq = [0]
 
 #Z (Hoja4)
-lista_Z_Zc = list()
-lista_Z_Zl = list()
-lista_Z_Zr = list()
-lista_Z_Zeq = list()
+lista_Z_Zieq = list()
+lista_Z_Zkeq = list()
+lista_Z_Yieq = list()
+lista_Z_Ykeq = list()
+lista_Zinodos = list()
+lista_Zknodos = list()
 #le damos un valor inicial
-lista_Z_Zc = [0]
-lista_Z_Zl = [0]
-lista_Z_Zr = [0]
-lista_Z_Zeq = [0]
+lista_Z_Zieq = [0]
+lista_Z_Yieq = [0]
+lista_Z_Zkeq = [0]
+lista_Z_Ykeq = [0]
 
+#calcular la cantidad de nodos
+for n in range(1, len(V_fuente["Bus i"])+1):
+    #guardamos los nodos de la hoja2 en una lista
+    nodosV = hoja2[0][n]
+    lista_Vnodos.append(nodosV)
+for n in range(1, len(I_fuente["Bus i"])+1):
+    #guardamos los nodos de la hoja3 en una lista
+    nodosI = hoja3[0][n]
+    lista_Inodos.append(nodosI)
+for n in range(1, len(Z["Bus i"])+1):
+    #guardamos los nodos de la hoja4 en una lista
+    nodosZ = hoja4[0][n]
+    lista_Zinodos.append(nodosZ)
+    nodosZ = hoja4[1][n]
+    lista_Zknodos.append(nodosZ)
 
-#Operaciones de los elementos para V_fuente (Hoja2)
+lista_nodos = list()
+lista_nodos = lista_Vnodos + lista_Inodos + lista_Zinodos + lista_Zknodos
+lista_nodos = pd.unique(lista_nodos)
+lista_nodos = lista_nodos.tolist()
+lista_nodos = sorted(lista_nodos)
+dim = len(lista_nodos)
+if lista_nodos[0] == 0:
+    dim = dim - 1
+#metemos valores en las listas
+lista = list()
+lista = [0]
+for n in range(dim):
+    lista_V_fasorial.append(np.complex_(0))
+    lista_VZeq.append(np.complex_(0))
+    lista_VYeq.append(np.complex_(0))
+
+    lista_I_fasorial.append(np.complex_(0))
+    lista_IZeq.append(np.complex_(0))
+    lista_IYeq.append(np.complex_(0))
+
+    lista_Z_Zieq.append(np.complex_(0))
+    lista_Z_Yieq.append(np.complex_(0))
+    lista_Z_Zkeq.append(np.complex_(0))
+    lista_Z_Ykeq.append(np.complex_(0))
+
 #Revisamos primero si los valores en las listas no presentan errores
 for n in range(1, len(V_fuente["Bus i"])+1):
     if hoja2[4][n] == 0:
@@ -120,9 +129,6 @@ for n in range(1, len(V_fuente["Bus i"])+1):
 for n in range(1, len(V_fuente["Bus i"])+1):
     #calculo del angulo de desfase
     V_angulo = round(w * hoja2[3][n])
-    #print(angulo)
-    #guardamos el angulo en una lista en orden
-    lista_Vangulos.append(V_angulo)
     #Conversiones de mH a H y uF a F
     converion_CfV = hoja2[6][n] * 10 ** -6
     conversion_LfV = hoja2[5][n] * 10 ** -3
@@ -140,30 +146,31 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     V_Zr = V_Xr #impedancia del resistor
     #calculamos la impedancia equivalante de los elementos en serie
     V_Zeq = np.round(V_Zr + V_Zl + V_Zc, 4)
+    #calculo de la admitancia
+    if V_Zl != 0:
+        V_Yl = 1 / V_Zl
+    else:
+        V_Yl = 0
+    if V_Zc != 0:
+        V_Yc = 1 / V_Zc
+    else:
+        V_Yc = 0
+    if V_Zr != 0:
+        V_Yr = 1 / V_Zr
+    else:
+        V_Yr = 0
+    #calculamos la admitancia equivalente de los elementos en serie
+    V_Yeq = np.round(V_Yr + V_Yl + V_Yc, 4)
     #guardamos los valores en listas
-    lista_V_Zc.append(V_Zc)
-    lista_V_Zl.append(V_Zl)
-    lista_V_Zr.append(V_Zr)
-    lista_VZeq.append(V_Zeq)
+    lista_VZeq[hoja2[0][n]] = V_Zeq
+    lista_VYeq[hoja2[0][n]] = V_Yeq
     #calculo del voltaje rms
     Vrms = round(hoja2[2][n] / np.sqrt(2), 4)
-    #guardamos en una lista
-    lista_Vrms.append(Vrms)
     #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
     V_fasorial = Vrms * np.cos(V_angulo) + np.complex_(Vrms * np.sin(V_angulo) * 1j)
     V_fasorial = np.round(V_fasorial, 4)
     #guardamos en una lista
-    lista_V_fasorial.append(V_fasorial)
-
-'''print("Listas: ")
-print()
-print(lista_angulos)
-print(lista_V_Zc)
-print(lista_V_Zl)
-print(lista_V_Zr)
-print(lista_Vrms)
-print(lista_V_fasorial)
-#print(hoja2)'''
+    lista_V_fasorial[hoja2[0][n]] = V_fasorial
 
 #calculo para el caso en que hay varias fuentes en un mismo nodo, es decir, en serie
 for i in range(1, len(hoja2[0])):
@@ -173,10 +180,16 @@ for i in range(1, len(hoja2[0])):
             Veq_fasorial = np.round(lista_V_fasorial[i] + lista_V_fasorial[k], 4)
             #sacamos los voltajes del nodo de la lista
             lista_V_fasorial.pop(i)
-            lista_V_fasorial.pop(k-1)
+            lista_V_fasorial[k-1] = np.complex_(0)
             #guardamos el nuevo voltaje en la lista, en la pocicion de i
             lista_V_fasorial.insert(i, Veq_fasorial)
-            #print(lista_V_fasorial)
+            #sumamos las impedancias en serie
+            V_Zeq = lista_VZeq[i] + lista_VZeq[k]
+            #los eliminamos de las listas
+            lista_VZeq.pop(i)
+            lista_VZeq[k-1] = np.complex_(0)
+            #guardamos la nueva impedancia
+            lista_VZeq.insert(i, V_Zeq)
 
 #Operaciones de los elementos para I_fuente (Hoja3)
 #Revisamos primero si los valores en las listas no presentan errores
@@ -199,9 +212,6 @@ for n in range(1, len(I_fuente["Bus i"])+1):
 for n in range(1, len(I_fuente["Bus i"])+1):
     #calculo del angulo de desfase
     I_angulo = round(w * hoja3[3][n])
-    #print(angulo)
-    #guardamos el angulo en una lista en orden
-    lista_Iangulos.append(I_angulo)
     #Conversiones de mH a H y uF a F
     converion_CfI = hoja3[6][n] * 10 ** -6
     conversion_LfI = hoja3[5][n] * 10 ** -3
@@ -219,30 +229,31 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     I_Zr = (I_Xr) #impedancia del resistor
     #calculo de la impedancia equivalente en serie
     I_Zeq = np.round(I_Zr + I_Zl + I_Zc, 4)
+    #calculo de la admitancia
+    if I_Zl != 0:
+        I_Yl = 1 / I_Zl
+    else:
+        I_Yl = 0
+    if I_Zc != 0:
+        I_Yc = 1 / I_Zc
+    else:
+        I_Yc = 0
+    if I_Zr != 0:
+        I_Yr = 1 / I_Zr
+    else:
+        I_Yr = 0
+    #calculamos la admitancia equivalente de los elementos en serie
+    I_Yeq = np.round(I_Yr + I_Yl + I_Yc, 4)
     #guardamos los valores en listas
-    lista_I_Zc.append(I_Zc)
-    lista_I_Zl.append(I_Zl)
-    lista_I_Zr.append(I_Zr)
-    lista_IZeq.append(I_Zeq)
+    lista_IZeq[hoja3[0][n]] = I_Zeq
+    lista_IYeq[hoja3[0][n]] = I_Yeq
     #calculo del corriente rms
     Irms = round(hoja3[2][n] / np.sqrt(2), 4)
-    #guardamos en una lista
-    lista_Irms.append(Irms)
     #calculo del corriente en forma fasorial (CREO QUE ES ASI, IDK ??)
     I_fasorial = Irms * np.cos(I_angulo) + np.complex_(Irms * np.sin(I_angulo) * 1j)
     I_fasorial = np.round(I_fasorial, 4)
     #guardamos en una lista
-    lista_I_fasorial.append(I_fasorial)
-
-'''print("Listas: ")
-print()
-print(lista_angulos)
-print(lista_I_Zc)
-print(lista_I_Zl)
-print(lista_I_Zr)
-print(lista_Irms)
-print(lista_I_fasorial)
-#print(hoja3)'''
+    lista_I_fasorial[hoja3[0][n]] = I_fasorial
 
 #calculo para el caso en que hay varias fuentes en un mismo nodo, es decir, en serie
 for i in range(1, len(hoja3[0])):
@@ -252,10 +263,17 @@ for i in range(1, len(hoja3[0])):
             Ieq_fasorial = np.round(lista_I_fasorial[i] + lista_I_fasorial[k], 4)
             #sacamos las corrientes del nodo de la lista
             lista_I_fasorial.pop(i)
-            lista_I_fasorial.pop(k-1)
+            lista_I_fasorial[k-1] = np.complex_(0)
             #guardamos la nueva corriente en la lista, en la pocicion de i
             lista_I_fasorial.insert(i, Ieq_fasorial)
             #print(lista_I_fasorial)
+            #sumamos las impedancias en serie
+            I_Zeq = lista_IZeq[i] + lista_IZeq[k]
+            #los eliminamos de las listas
+            lista_IZeq.pop(i)
+            lista_IZeq[k-1] = np.complex_(0)
+            #guardamos la nueva impedancia
+            lista_IZeq.insert(i, I_Zeq)
 
 #Operaciones de los elementos para Z (Hoja4)
 #Revisamos primero si los valores en las listas no presentan errores
@@ -293,36 +311,93 @@ for n in range(1, len(Z["Bus i"])+1):
     Z_Zr = (ZR) #impedancia del resistor
     #calculo de las impedancias en serie
     Z_Zeq = np.round(Z_Zr + Z_Zl + Z_Zc, 4)
+    #calculo de la admitancia
+    if Z_Zl != 0:
+        Z_Yl = 1 / Z_Zl
+    else:
+        Z_Yl = 0
+    if Z_Zc != 0:
+        Z_Yc = 1 / Z_Zc
+    else:
+        Z_Yc = 0
+    if Z_Zr != 0:
+        Z_Yr = 1 / Z_Zr
+    else:
+        Z_Yr = 0
+    #calculamos la admitancia equivalente de los elementos en serie
+    Z_Yeq = np.round(Z_Yr + Z_Yl + Z_Yc, 4)
     #guardamos los valores en listas
-    lista_Z_Zc.append(Z_Zc)
-    lista_Z_Zl.append(Z_Zl)
-    lista_Z_Zr.append(Z_Zr)
-    lista_Z_Zeq.append(Z_Zeq)
-'''print("Listas: ")
-print()
-print(lista_Z_Zc)
-print(lista_Z_Zl)
-print(lista_Z_Zr)
-#print(hoja4)'''
-#calculo de las impedancias que esten en paralelo
+    lista_Z_Zieq[hoja4[0][n]] = Z_Zeq
+    lista_Z_Yieq[hoja4[0][n]] = Z_Yeq
+    lista_Z_Zkeq[hoja4[1][n]] = Z_Zeq
+    lista_Z_Ykeq[hoja4[1][n]] = Z_Yeq
+
+#calculo de las impedancias que esten en paralelo en Bus i
 for i in range(1, len(hoja4[0])):
     for k in range(i + 1, len(hoja4[0])):
         if hoja4[0][i] == hoja4[0][k] and hoja4[1][i] == hoja4[1][k]:
-            #Para las inductancias capacitivas
-            if lista_Z_Zeq[i] != 0 and lista_Z_Zeq[k] != 0:
-                Z_Zeq = 1 / lista_Z_Zeq[i] + 1 / lista_Z_Zeq[k]
-            elif lista_Z_Zeq[i] != 0 and lista_Z_Zeq[k] == 0:
-                Z_Zeq = 1 / lista_Z_Zeq[i]
-            elif lista_Z_Zeq[i] == 0 and lista_Z_Zeq[k] != 0:
-                Z_Zeq = 1 / lista_Z_Zeq[k]
-            elif lista_Z_Zeq[i] == 0 and lista_Z_Zeq[k] == 0:
+            #Para las inductancias
+            if lista_Z_Zieq[i] != 0 and lista_Z_Zieq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zieq[i] + 1 / lista_Z_Zieq[k]
+            elif lista_Z_Zieq[i] != 0 and lista_Z_Zieq[k] == 0:
+                Z_Zeq = 1 / lista_Z_Zieq[i]
+            elif lista_Z_Zieq[i] == 0 and lista_Z_Zieq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zieq[k]
+            elif lista_Z_Zieq[i] == 0 and lista_Z_Zieq[k] == 0:
                 Z_Zeq = 0
             #Suma de la impedancia equivalente
             if Z_Zeq != 0:
                 Z_Zeq = np.round(1 / Z_Zeq)
             #sacamos de las listas las impedancias en paralelo
             #sacamos los elementos anteriores de la listas
-            lista_Z_Zeq.pop(i)
-            lista_Z_Zeq.pop(k-1)
+            lista_Z_Zieq.pop(i)
+            lista_Z_Zieq[k-1] = np.complex_(0)
             #guardamos los datos en una lista
-            lista_Z_Zeq.insert(i, Z_Zeq)
+            lista_Z_Zieq.insert(i, Z_Zeq)
+            #Para las admitancias
+            Z_Yeq = np.round(lista_Z_Yieq[i] + lista_Z_Yieq[k], 4)
+            #sacamos los elementos anteriores de la listas
+            lista_Z_Yieq.pop(i)
+            lista_Z_Yieq[k-1] = np.complex_(0)
+            #guardamos los datos en una lista
+            lista_Z_Yieq.insert(i, Z_Yeq)
+
+#calculo de las impedancias que esten en paralelo en Bus j
+for i in range(1, len(hoja4[1])):
+    for k in range(i + 1, len(hoja4[1])):
+        if hoja4[1][i] == hoja4[1][k] and hoja4[0][i] == hoja4[0][k]:
+            #Para las inductancias
+            if lista_Z_Zkeq[i] != 0 and lista_Z_Zkeq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zkeq[i] + 1 / lista_Z_Zkeq[k]
+            elif lista_Z_Zkeq[i] != 0 and lista_Z_Zkeq[k] == 0:
+                Z_Zeq = 1 / lista_Z_Zkeq[i]
+            elif lista_Z_Zkeq[i] == 0 and lista_Z_Zkeq[k] != 0:
+                Z_Zeq = 1 / lista_Z_Zkeq[k]
+            elif lista_Z_Zkeq[i] == 0 and lista_Z_Zkeq[k] == 0:
+                Z_Zeq = 0
+            #Suma de la impedancia equivalente
+            if Z_Zeq != 0:
+                Z_Zeq = np.round(1 / Z_Zeq)
+            #sacamos de las listas las impedancias en paralelo
+            #sacamos los elementos anteriores de la listas
+            lista_Z_Zkeq.pop(i)
+            lista_Z_Zkeq[k-1] = np.complex_(0)
+            #guardamos los datos en una lista
+            lista_Z_Zkeq.insert(i, Z_Zeq)
+            #Para las admitancias
+            Z_Yeq = np.round(lista_Z_Ykeq[i] + lista_Z_Ykeq[k], 4)
+            #sacamos los elementos anteriores de la listas
+            lista_Z_Ykeq.pop(i)
+            lista_Z_Ykeq[k-1] = np.complex_(0)
+            #guardamos los datos en una lista
+            lista_Z_Ykeq.insert(i, Z_Yeq)
+
+#crear la matriz
+ybus_array = np.zeros((dim, dim), dtype = "complex_")
+
+#print(ybus_array)
+'''contador = 0
+for n in range(dim):
+    for m in range(dim):
+        ybus_array[n][m] = contador
+        contador += 1'''
