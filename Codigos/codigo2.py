@@ -5,7 +5,7 @@ import math, sys, openpyxl
 #revisamos el excel con pandas
 dat = "data_io_copia.xlsx"
 datos = pd.ExcelFile(dat)
-print(datos.sheet_names)
+#print(datos.sheet_names)
 print()
 #guardamos las hojas de cada uno para poder revisar las celdas
 #para las celdas se usa el formato [columna][fila]
@@ -40,10 +40,12 @@ lista_V_fasorial = list()
 lista_VZeq = list()
 lista_VYeq = list()
 lista_Vnodos = list()
+lista_IV = list()
 #le damos un valor incial
 lista_V_fasorial = [0]
 lista_VZeq = [0]
 lista_VYeq = [0]
+lista_IV = [0]
 
 #I_fuente (Hoja3)
 lista_I_fasorial = list()
@@ -99,6 +101,7 @@ for n in range(dim):
     lista_V_fasorial.append(np.complex_(0))
     lista_VZeq.append(np.complex_(0))
     lista_VYeq.append(np.complex_(0))
+    lista_IV.append(0)
 
     lista_I_fasorial.append(np.complex_(0))
     lista_IZeq.append(np.complex_(0))
@@ -128,7 +131,7 @@ for n in range(1, len(V_fuente["Bus i"])+1):
 
 for n in range(1, len(V_fuente["Bus i"])+1):
     #calculo del angulo de desfase
-    V_angulo = round(w * hoja2[3][n])
+    V_angulo = w * hoja2[3][n]
     #Conversiones de mH a H y uF a F
     converion_CfV = hoja2[6][n] * 10 ** -6
     conversion_LfV = hoja2[5][n] * 10 ** -3
@@ -140,9 +143,7 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     V_Xr = hoja2[4][n] #reactancia del resistor
     #calculo de impedancia
     V_Zl = np.complex_(V_Xl * 1j) #impedancia del inductor
-    V_Zl = np.round(V_Zl, 4)
     V_Zc = np.complex_(V_Xc * -1j) #impedancia del capacitor
-    V_Zc = np.round(V_Zc, 4)
     V_Zr = V_Xr #impedancia del resistor
     #calculamos la impedancia equivalante de los elementos en serie
     V_Zeq = np.round(V_Zr + V_Zl + V_Zc, 4)
@@ -165,12 +166,19 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     lista_VZeq[hoja2[0][n]] = V_Zeq
     lista_VYeq[hoja2[0][n]] = V_Yeq
     #calculo del voltaje rms
-    Vrms = round(hoja2[2][n] / np.sqrt(2), 4)
+    Vrms = hoja2[2][n] / np.sqrt(2)
     #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
     V_fasorial = Vrms * np.cos(V_angulo) + np.complex_(Vrms * np.sin(V_angulo) * 1j)
-    V_fasorial = np.round(V_fasorial, 4)
+    V_fasorial = V_fasorial
     #guardamos en una lista
-    lista_V_fasorial[hoja2[0][n]] = V_fasorial
+    lista_V_fasorial[hoja2[0][n]] = np.round(V_fasorial, 4)
+    #calculamos las corrientes inyectadas
+    if V_fasorial != 0 and V_Zeq != 0:
+        IV = V_fasorial / V_Zeq
+    elif V_fasorial == 0 or V_Zeq == 0:
+        IV = 0
+    #guardamos en una lista
+    lista_IV[hoja2[0][n]] = np.round(IV, 4)
 
 #calculo para el caso en que hay varias fuentes en un mismo nodo, es decir, en serie
 for i in range(1, len(hoja2[0])):
@@ -211,7 +219,7 @@ for n in range(1, len(I_fuente["Bus i"])+1):
 
 for n in range(1, len(I_fuente["Bus i"])+1):
     #calculo del angulo de desfase
-    I_angulo = round(w * hoja3[3][n])
+    I_angulo = w * hoja3[3][n]
     #Conversiones de mH a H y uF a F
     converion_CfI = hoja3[6][n] * 10 ** -6
     conversion_LfI = hoja3[5][n] * 10 ** -3
@@ -223,9 +231,7 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     I_Xr = hoja3[4][n] #reactancia del resistor
     #calculo de impedancia
     I_Zl = np.complex_(I_Xl * 1j) #impedancia del inductor
-    I_Zl = np.round(I_Zl, 4)
     I_Zc = np.complex_(I_Xc * -1j) #impedancia del capacitor
-    I_Zc = np.round(I_Zc, 4)
     I_Zr = (I_Xr) #impedancia del resistor
     #calculo de la impedancia equivalente en serie
     I_Zeq = np.round(I_Zr + I_Zl + I_Zc, 4)
@@ -248,7 +254,7 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     lista_IZeq[hoja3[0][n]] = I_Zeq
     lista_IYeq[hoja3[0][n]] = I_Yeq
     #calculo del corriente rms
-    Irms = round(hoja3[2][n] / np.sqrt(2), 4)
+    Irms = hoja3[2][n] / np.sqrt(2)
     #calculo del corriente en forma fasorial (CREO QUE ES ASI, IDK ??)
     I_fasorial = Irms * np.cos(I_angulo) + np.complex_(Irms * np.sin(I_angulo) * 1j)
     I_fasorial = np.round(I_fasorial, 4)
@@ -305,9 +311,7 @@ for n in range(1, len(Z["Bus i"])+1):
     ZR = hoja4[3][n] #reactancia del resistor
     #calculo de impedancia
     Z_Zl = np.complex_(ZL * 1j) #impedancia del inductor
-    Z_Zl = np.round(Z_Zl, 4)
     Z_Zc = np.complex_(ZC * -1j) #impedancia del capacitor
-    Z_Zc = np.round(Z_Zc, 4)
     Z_Zr = (ZR) #impedancia del resistor
     #calculo de las impedancias en serie
     Z_Zeq = np.round(Z_Zr + Z_Zl + Z_Zc, 4)
@@ -347,7 +351,7 @@ for i in range(1, len(hoja4[0])):
                 Z_Zeq = 0
             #Suma de la impedancia equivalente
             if Z_Zeq != 0:
-                Z_Zeq = np.round(1 / Z_Zeq)
+                Z_Zeq = np.round(1 / Z_Zeq, 4)
             #sacamos de las listas las impedancias en paralelo
             #sacamos los elementos anteriores de la listas
             lista_Z_Zieq.pop(i)
@@ -377,7 +381,7 @@ for i in range(1, len(hoja4[1])):
                 Z_Zeq = 0
             #Suma de la impedancia equivalente
             if Z_Zeq != 0:
-                Z_Zeq = np.round(1 / Z_Zeq)
+                Z_Zeq = np.round(1 / Z_Zeq, 4)
             #sacamos de las listas las impedancias en paralelo
             #sacamos los elementos anteriores de la listas
             lista_Z_Zkeq.pop(i)
@@ -392,7 +396,7 @@ for i in range(1, len(hoja4[1])):
             #guardamos los datos en una lista
             lista_Z_Ykeq.insert(i, Z_Yeq)
 
-#crear la matriz
+#crear la matriz ybus
 ybus_array = np.zeros((dim, dim), dtype = "complex_")
 
 for i in range(dim):
@@ -400,6 +404,16 @@ for i in range(dim):
         if i == j:
             ybus_array[i][j] = lista_VYeq[i+1] + lista_IYeq[i+1] + lista_Z_Yieq[i+1] + lista_Z_Ykeq[j+1]
         elif i != j:
-            ybus_array[i][j] = lista_VYeq[i+1] + lista_IYeq[i+1] + lista_Z_Yieq[i+1] + lista_VYeq[j+1] + lista_IYeq[j+1] + lista_Z_Ykeq[j+1]
+            ybus_array[i][j] = lista_VYeq[i+1] + lista_IYeq[i+1] + lista_Z_Yieq[i+1] + lista_Z_Ykeq[i+1] + lista_VYeq[j+1] + lista_IYeq[j+1] + lista_Z_Yieq[j+1] + lista_Z_Ykeq[j+1]
 
-print(ybus_array)
+#matriz de corrientes
+corrientes = np.zeros((dim,1), dtype = "complex_")
+
+contador = 0
+for i in range(0, dim):
+    corrientes[i][0] = lista_IV[i+1]
+
+#Resolver las matrices
+tensiones_nodales = np.linalg.solve(ybus_array, corrientes)
+
+print(type(tensiones_nodales))
