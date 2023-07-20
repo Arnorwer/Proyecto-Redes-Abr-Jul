@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import math, sys, openpyxl
+import math, sys, openpyxl, cmath
 
 #revisamos el excel con pandas
 dat = "data_io_copia.xlsx"
@@ -62,6 +62,10 @@ lista_Zknodos = list()
 lista_Z_Zieq = [0]
 lista_Z_Zkeq = [0]
 
+#S_fuente
+lista_S_fuente = list()
+lista_S_fuente = [0]
+
 #calcular la cantidad de nodos
 for n in range(1, len(V_fuente["Bus i"])+1):
     #guardamos los nodos de la hoja2 en una lista
@@ -100,6 +104,8 @@ for n in range(dim):
     lista_Z_Zieq.append(np.complex_(0))
     lista_Z_Zkeq.append(np.complex_(0))
     
+    lista_S_fuente.append(np.complex_(0))
+    
 #Matriz principal
 listas_MP = []
 for i in range(dim):
@@ -108,22 +114,32 @@ for i in range(dim):
     
 lista_nodo1 = list()
 
+#Revisamos que entre las listas V_fuente e I_fuente no hayan nodos repetidos
+for i in range(1, len(V_fuente["Bus i"])+1):
+    for n in range(1, len(I_fuente["Bus i"])+1):
+        if hoja2[0][i] == hoja3[0][n]:
+            hoja2[1][i] = "Warning"
+            hoja3[1][n] = "Warning"
+            print(hoja2)
+            print(hoja3)
+            sys.exit("Error de datos en Fuentes")
+
 #Revisamos primero si los valores en las listas no presentan errores
 
 '''for n in range(1, len(V_fuente["Bus i"])+1):
     if hoja2[4][n] == 0:
-        print()
+        print("b")
     elif hoja2[5][n] == 0:
-        print()
+        print("a")
     elif hoja2[6][n] == 0:
-        print()
+        print("c")
 
 for n in range(1, len(V_fuente["Bus i"])+1):
     if type(hoja2[4][n]) == str or hoja2[4][n] < 0:
         sys.exit("Error de datos en Rf")
     elif type(hoja2[5][n]) == str or hoja2[5][n] < 0:
         sys.exit("Error de datos en Lf")
-    elif type(hoja2[6][n]) == str or hoja2[6][n] < 0:
+    elif type(hoja2[6][n]) == str:
         sys.exit("Error de datos Cf")'''
 
 for n in range(1, len(V_fuente["Bus i"])+1):
@@ -148,9 +164,8 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     lista_VZeq[hoja2[0][n]] = V_Zeq
     #calculo del voltaje rms
     Vrms = hoja2[2][n] / np.sqrt(2)
-    #calculo del voltaje en forma fasorial (CREO QUE ES ASI, IDK ??)
+    #calculo del voltaje en forma fasorial
     V_fasorial = Vrms * np.cos(V_angulo) + np.complex_(Vrms * np.sin(V_angulo) * 1j)
-    V_fasorial = V_fasorial
     #guardamos en una lista
     lista_V_fasorial[hoja2[0][n]] = np.round(V_fasorial, 4)
     #calculamos las corrientes inyectadas
@@ -162,9 +177,8 @@ for n in range(1, len(V_fuente["Bus i"])+1):
     lista_IV[hoja2[0][n]] = np.round(IV, 4)
     for a in range(n+1):
         if hoja2[0][n] == a+1:
-            lista_nodo1.append(1/V_Zeq)
             listas_MP[a].append(1/V_Zeq)
-            
+
 #calculo para el caso en que hay varias fuentes conectadas al mismo nodo, es decir, en paralelo
 for i in range(1, len(hoja2[0])):
     for k in range(i + 1, len(hoja2[0])):
@@ -213,13 +227,12 @@ for n in range(1, len(I_fuente["Bus i"])+1):
     lista_IZeq[hoja3[0][n]] = I_Zeq
     #calculo del corriente rms
     Irms = hoja3[2][n] / np.sqrt(2)
-    #calculo del corriente en forma fasorial (CREO QUE ES ASI, IDK ??)
+    #calculo del corriente en forma fasorial
     I_fasorial = Irms * np.cos(I_angulo) + np.complex_(Irms * np.sin(I_angulo) * 1j)
     I_fasorial = np.round(I_fasorial, 4)
     #guardamos en una lista
     lista_I_fasorial[hoja3[0][n]] = I_fasorial
-    if hoja3[0][n] == n:
-        lista_nodo1.append(1/I_Zeq)
+    lista_IV[hoja3[0][n]] = I_fasorial
 
 #calculo para el caso en que hay varias fuentes conectadas al mismo nodo, es decir, en paralelo
 for i in range(1, len(hoja3[0])):
@@ -268,10 +281,10 @@ for n in range(1, len(Z["Bus i"])+1):
     lista_Z_Zkeq[hoja4[1][n]] = Z_Zeq
     for a in range(n+1):
         if hoja4[0][n] == a+1:
-            lista_nodo1.append(1/Z_Zeq)
+            lista_nodo1.append(np.round(1/Z_Zeq,))
             listas_MP[a].append(np.round(1/Z_Zeq, 4))
         if hoja4[1][n] == a+1:
-            lista_nodo1.append(1/Z_Zeq)
+            lista_nodo1.append(np.round(1/Z_Zeq,4))
             listas_MP[a].append(np.round(1/Z_Zeq, 4))
 
 #calculo de las impedancias que esten en paralelo en Bus i
@@ -320,23 +333,45 @@ for i in range(1, len(hoja4[1])):
 
 #crear la matriz ybus
 ybus_array = np.zeros((dim, dim), dtype = "complex_")
+
+#Diagonal principal
 for i in range(dim+1):
     for j in range(dim+1):
-        #print("Bus i ", hoja4[0][i+1], "Bus j", hoja4[1][j+1])
         if i == j:
             ybus_array[i-1][j-1] = sum(listas_MP[i-1])
         elif i != j:
             if hoja4[0][i+1] == i and hoja4[1][j+1] == j:
-                print("Bus i ", hoja4[0][i+1], "Bus j", hoja4[1][j+1])
-                ybus_array[i-j][j-i] = lista_nodo1[1]
-                print(i+1)
+                ybus_array[i-j][j-i] = 0
 
-print(ybus_array)
+#Demas elementos de la matriz                
+for a in range(1, len(Z["Bus i"])+1):
+    if hoja4[0][a] != 0 and hoja4[1][a] != 0:
+        ybus_array[hoja4[1][a-1]][hoja4[0][a-1]] = -1*lista_nodo1[a]
+        ybus_array[hoja4[0][a-1]][hoja4[1][a-1]] = -1*lista_nodo1[a]
+        if lista_nodo1[a] == 0j:
+            ybus_array[hoja4[0][a-2]][hoja4[1][a-2]] = -1*lista_nodo1[a+1]
+            ybus_array[hoja4[1][a-2]][hoja4[0][a-2]] = -1*lista_nodo1[a+1]
+        
 #matriz de corrientes
 corrientes = np.zeros((dim,1), dtype = "complex_")
 for i in range(0, dim):
     corrientes[i][0] = lista_IV[i+1]
-
+    
 #Resolver las matrices
 tensiones_nodales = np.linalg.solve(ybus_array, corrientes)
 tensiones_nodales = np.round(tensiones_nodales, 4)
+
+#Obtenemos el VTH de las tensiones nodales
+VTH = tensiones_nodales
+
+#Potencia de las fuentes
+for n in range(1, len(V_fuente["Bus i"])+1):
+    a = hoja2[0][n]
+    S_fuente = np.conjugate(lista_IV[a]) * lista_V_fasorial[a]
+    lista_S_fuente[a] = np.round(S_fuente, 4)
+
+print(lista_S_fuente)
+#Matris ybuss invertida
+zbuss_array = np.linalg.inv(ybus_array)
+#obtenemos el zth de la diagonal principal invertida
+ZTH = np.diag(zbuss_array)
