@@ -368,9 +368,11 @@ VTH = tensiones_nodales
 for n in range(1, len(V_fuente["Bus i"])+1):
     a = hoja2[0][n]
     S_fuente = np.conjugate(lista_IV[a]) * lista_V_fasorial[a]
+    #separamos la parte real de la fuente de la imaginaria
+    P = S_fuente.real
+    Q = S_fuente.imag
     lista_S_fuente[a] = np.round(S_fuente, 4)
 
-print(lista_S_fuente)
 #Matris ybuss invertida
 zbuss_array = np.linalg.inv(ybus_array)
 #obtenemos el zth de la diagonal principal invertida
